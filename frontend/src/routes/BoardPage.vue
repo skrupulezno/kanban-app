@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import draggable from 'vuedraggable';  // импорт компонента перетаскивания
+import { taskService } from '../services/task.service';
 
 interface Task {
   id: number;
@@ -36,13 +37,17 @@ onMounted(async () => {
 });
 
 // Вызывается после окончания перетаскивания задачи
-function onTaskDrop(_evt: any) {
-  // После перемещения обновим поле stage каждой задачи по текущему положению:
-  todoTasks.value.forEach(t => t.stage = 'TODO');
-  inProgressTasks.value.forEach(t => t.stage = 'IN_PROGRESS');
-  doneTasks.value.forEach(t => t.stage = 'DONE');
-  // Здесь можно отправить запрос на бэкенд для сохранения нового статуса задач (например, PATCH)
-  // и, при необходимости, нового порядка задач.
+async function onTaskDrop(_evt: any) {
+  const updateAll = async (tasks: any[], stage: 'TODO' | 'IN_PROGRESS' | 'DONE') => {
+    for (const task of tasks) {
+      task.stage = stage;
+      await taskService.updateStage(task.id, stage);
+    }
+  };
+
+  await updateAll(todoTasks.value, 'TODO');
+  await updateAll(inProgressTasks.value, 'IN_PROGRESS');
+  await updateAll(doneTasks.value, 'DONE');
 }
 
 // Создание новой задачи

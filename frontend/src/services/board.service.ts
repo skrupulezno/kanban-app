@@ -6,6 +6,10 @@ export const boardService = {
     return axiosWithAuth.get<IBoard[]>('/boards');
   },
 
+  async getBoardsBySpaceId(spaceId: number) {
+    return axiosWithAuth.get(`/spaces/${spaceId}/boards`);
+  },
+
   async getBoardById(id: number) {
     return axiosWithAuth.get<IBoard>(`/boards/${id}`);
   },

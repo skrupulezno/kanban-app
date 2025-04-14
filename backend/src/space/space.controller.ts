@@ -24,6 +24,11 @@ export class SpaceController {
     return this.spaceService.findOne(id);
   }
 
+  @Get(':id/boards')
+  async getBoards(@Param('id', ParseIntPipe) id: number) {
+    return this.spaceService.getBoardsBySpaceId(id);
+  }
+
   @Put(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() updateSpaceDto: UpdateSpaceDto) {
     return this.spaceService.update(id, updateSpaceDto);

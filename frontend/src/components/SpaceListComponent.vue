@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { spaceService } from '../services/space.service';
+import { boardService } from '../services/board.service';
+import { ISpace } from '../types/space.types';
 
-interface Board { id: number; name: string; spaceId: number }
-interface Space { id: number; name: string; boards?: Board[] }
-
-const spaces = ref<Space[]>([]);
+const spaces = ref<ISpace[]>([]);
 
 onMounted(async () => {
-  // Получить все спейсы
-  const res = await fetch('/api/spaces');
-  spaces.value = await res.json();
-  // Для каждого спейса получить его доски
-  for (const space of spaces.value) {
-    const resBoards = await fetch(`/api/spaces/${space.id}/boards`);
-    space.boards = await resBoards.json();
+  try {
+    const { data: spaceList } = await spaceService.getAllSpaces();
+    for (const space of spaceList) {
+      const { data: boards } = await boardService.getBoardsBySpaceId(space.id);
+      space.boards = boards;
+    }
+    spaces.value = spaceList;
+  } catch (error) {
+    console.error('Ошибка загрузки спейсов и досок:', error);
   }
 });
 </script>

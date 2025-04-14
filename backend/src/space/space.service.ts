@@ -33,8 +33,19 @@ export class SpaceService {
     return space;
   }
 
+  async getBoardsBySpaceId(id: number) {
+    const space = await this.prisma.space.findUnique({
+      where: { id },
+      include: { boards: true },
+    });
+    if (!space) {
+      throw new NotFoundException(`Space with id=${id} not found`);
+    }
+    return space.boards;
+  }
+
   async update(id: number, updateSpaceDto: UpdateSpaceDto) {
-    await this.findOne(id); // выбросить NotFoundException, если space не найден
+    await this.findOne(id);
     return this.prisma.space.update({
       where: { id },
       data: updateSpaceDto,

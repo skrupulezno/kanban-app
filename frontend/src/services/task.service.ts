@@ -20,5 +20,9 @@ export const taskService = {
 
   async deleteTask(id: number) {
     return axiosWithAuth.delete<ITask>(`/tasks/${id}`);
-  }
+  },
+
+    async updateStage(id: number, stage: 'TODO' | 'IN_PROGRESS' | 'DONE') {
+      return axiosWithAuth.put(`/tasks/${id}/stage`, { stage });
+    }
 };
