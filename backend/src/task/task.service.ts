@@ -5,7 +5,6 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { FilterTasksDto } from './dto/filter-tasks.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
-// Если тип JwtPayload ещё не определён, можно определить его так:
 interface JwtPayload {
   id: number;
   role: string;
@@ -16,16 +15,13 @@ export class TaskService {
   constructor(private prisma: PrismaService) {}
 
   async createTask(dto: CreateTaskDto): Promise<Task> {
-    // Если указан исполнитель, проверяем его существование
     if (dto.assignedToId) {
-      const user = await this.prisma.user.findUnique({
-        where: { id: dto.assignedToId },
-      });
+      const user = await this.prisma.user.findUnique({ where: { id: dto.assignedToId } });
       if (!user) {
         throw new NotFoundException(`User with id ${dto.assignedToId} not found`);
       }
     }
-  
+
     return this.prisma.task.create({
       data: {
         title: dto.title,
@@ -41,48 +37,29 @@ export class TaskService {
   async getTasks(filter: FilterTasksDto, user: JwtPayload): Promise<Task[]> {
     const { stage, spaceId, boardId, page, pageSize, sortBy, order } = filter;
     const where: Prisma.TaskWhereInput = {};
-    if (stage) {
-      where.stage = stage;
-    }
-    if (spaceId) {
-      // Если scalar поле не поддерживается, фильтруем через связь
-      where.space = { id: Number(spaceId) };
-    }
-    if (boardId) {
-      where.board = { id: Number(boardId) };
-    }
-    if (user.role !== 'admin') {
-      // Ограничиваем выборку задач текущим пользователем (через связь)
-      where.assignedTo = { id: user.id };
-    }
+
+    if (stage) where.stage = stage;
+    if (spaceId) where.space = { id: Number(spaceId) };
+    if (boardId) where.board = { id: Number(boardId) };
+    if (user.role !== 'admin') where.assignedTo = { id: user.id };
+
     const take = pageSize ? Number(pageSize) : 20;
     const skip = page ? (Number(page) - 1) * take : 0;
-    let orderBy: Prisma.TaskOrderByWithRelationInput | undefined;
-    if (sortBy) {
-      const sortOrder: Prisma.SortOrder = order?.toLowerCase() === 'desc' ? 'desc' : 'asc';
-      orderBy = { [sortBy]: sortOrder };
-    } else {
-      orderBy = { updatedAt: 'desc' };
-    }
-    return this.prisma.task.findMany({
-      where,
-      skip,
-      take,
-      orderBy
-    });
+    const orderBy: Prisma.TaskOrderByWithRelationInput = sortBy
+    ? { [sortBy]: order?.toLowerCase() === 'desc' ? 'desc' : 'asc' }
+    : { updatedAt: 'desc' };
+
+    return this.prisma.task.findMany({ where, skip, take, orderBy });
   }
 
   async getTaskById(id: number): Promise<Task> {
     const task = await this.prisma.task.findUnique({ where: { id } });
-    if (!task) {
-      throw new NotFoundException(`Task with id ${id} not found`);
-    }
+    if (!task) throw new NotFoundException(`Task with id ${id} not found`);
     return task;
   }
 
   async updateTask(id: number, dto: UpdateTaskDto, user: JwtPayload): Promise<Task> {
     const existingTask = await this.getTaskById(id);
-    // Если не админ, разрешаем обновление только своей задачи
     if (user.role !== 'admin' && existingTask.assignedToId !== user.id) {
       throw new ForbiddenException('You are not allowed to update this task');
     }
@@ -92,7 +69,6 @@ export class TaskService {
         title: dto.title,
         description: dto.description,
         stage: dto.stage,
-        // Если указан новый исполнитель, применяем связь
         assignedTo: dto.assignedToId ? { connect: { id: dto.assignedToId } } : undefined,
       }
     });
@@ -100,5 +76,24 @@ export class TaskService {
 
   async deleteTask(id: number): Promise<Task> {
     return this.prisma.task.delete({ where: { id } });
+  }
+
+  async updateStage(id: number, stage: 'TODO' | 'IN_PROGRESS' | 'DONE', user: JwtPayload): Promise<Task> {
+    const task = await this.getTaskById(id);
+    if (user.role !== 'admin' && task.assignedToId !== user.id) {
+      throw new ForbiddenException('You are not allowed to update the stage of this task');
+    }
+    return this.prisma.task.update({
+      where: { id },
+      data: { stage },
+    });
+  }
+
+  async getTasksByBoard(boardId: number, user: JwtPayload): Promise<Task[]> {
+    const where: Prisma.TaskWhereInput = {
+      boardId,
+      ...(user.role !== 'admin' ? { assignedTo: { id: user.id } } : {}),
+    };
+    return this.prisma.task.findMany({ where });
   }
 }

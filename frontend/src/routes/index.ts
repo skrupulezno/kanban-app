@@ -1,8 +1,9 @@
 // src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router';
-import LoginForm from '../routes/LoginForm.vue';
-import RegisterForm from '../routes/RegisterForm.vue';
-import Home from '../routes/HomePage.vue'; 
+import LoginForm from './LoginForm.vue';
+import RegisterForm from './RegisterForm.vue';
+import Home from './HomePage.vue'; 
+import Board from './BoardPage.vue'; 
 
 import { useAuthStore } from '../stores/auth.store';
 
@@ -12,6 +13,11 @@ const routes = [
   {
     path: '/',
     component: Home,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/board/:id',
+    component: Board,
     meta: { requiresAuth: true }
   }
 ];

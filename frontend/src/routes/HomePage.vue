@@ -2,18 +2,27 @@
 import { computed } from 'vue';
 
 import { useAuthStore } from '../stores/auth.store';
+import { useRouter } from 'vue-router';
+import SpaceListComponent from '../components/SpaceListComponent.vue';
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const userEmail = computed(() => authStore.user?.email || '');
+
+const logout = () => {
+  authStore.logout();
+  router.push({ path: '/auth/login' });
+}
 </script>
 
 <template>
   <div class="home-page">
     <h1>Добро пожаловать!</h1>
     <p>Ваш email: {{ userEmail }}</p>
-    <button @click="authStore.logout">Выйти</button>
+    <button @click="() => logout()">Выйти</button>
   </div>
+  <SpaceListComponent />
 </template>
 
 <style scoped>

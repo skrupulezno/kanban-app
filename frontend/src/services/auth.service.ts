@@ -12,7 +12,7 @@ export const authService = {
   },
 
   async getNewToken() {
-    const response = await axiosClassic.post<IAuthResponse>('/auth/login/access-token');
+    const response = await axiosClassic.post<IAuthResponse>('/auth/refresh');
     if (response.data.accessToken) {
       saveTokenStorage(response.data.accessToken);
     }
@@ -20,11 +20,6 @@ export const authService = {
   },
 
   async logout() {
-    const response = await axiosClassic.post<boolean>('/auth/logout');
     removeFromStorage();
-    if (response.data) {
-      removeFromStorage();
-    }
-    return response;
   }
 };

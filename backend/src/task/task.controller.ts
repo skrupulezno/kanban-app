@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+// backend/src/task/task.controller.ts
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Request, Put, ParseIntPipe } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { FilterTasksDto } from './dto/filter-tasks.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { UpdateTaskStageDto } from './dto/update-task-stage.dto';
 
 @Controller('tasks')
 @UseGuards(JwtAuthGuard)
@@ -39,4 +41,18 @@ export class TaskController {
   async deleteTask(@Param('id') id: string) {
     return this.taskService.deleteTask(+id);
   }
-}
+
+  @Put(':id/stage')
+  async updateStage(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTaskStageDto: UpdateTaskStageDto,
+    @Request() req
+  ) {
+    return this.taskService.updateStage(id, updateTaskStageDto.stage, req.user);
+  }
+
+  @Get('/board/:boardId')
+  async getTasksByBoard(@Param('boardId', ParseIntPipe) boardId: number, @Request() req) {
+    return this.taskService.getTasksByBoard(boardId, req.user);
+  }
+} 
