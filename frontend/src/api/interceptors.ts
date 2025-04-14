@@ -1,11 +1,6 @@
 import axios, { CreateAxiosDefaults } from 'axios';
-
-import {
-  getAccessToken,
-  removeFromStorage
-} from '../services/auth-token.service';
+import { getAccessToken, removeFromStorage } from '../services/auth-token.service';
 import { authService } from '../services/auth.service';
-
 import { errorCatch } from './error';
 
 const options: CreateAxiosDefaults = {
@@ -15,7 +10,6 @@ const options: CreateAxiosDefaults = {
 };
 
 const axiosClassic = axios.create(options);
-
 const axiosWithAuth = axios.create(options);
 
 axiosWithAuth.interceptors.request.use(config => {

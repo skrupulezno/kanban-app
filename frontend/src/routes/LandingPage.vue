@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import AnimatedLabel from '../components/AnimatedLabelComponent.vue';
-import DemoDashboard from '../components/DemoDashboardComponent.vue';
 import Header from '../components/HeaderComponent.vue';
 </script>
 
 <template>
   <div class="header-wrapper"><Header /></div>
   <main>
-    <div class="label-wrapper">
-      <AnimatedLabel />
-    </div>
+    123
   </main>
 </template>
 

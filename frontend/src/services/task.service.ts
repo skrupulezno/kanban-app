@@ -1,28 +1,24 @@
 import { axiosWithAuth } from '../api/interceptors';
-import { ITaskReponse, TypeTaskFormState } from '../types/task.types';
+import { ITask, ITaskInput, ITaskUpdate, ITaskFilter } from '../types/task.types';
 
-class TaskService {
-  private BASE_URL = `/user/tasks`;
+export const taskService = {
+  async getAllTasks(filter?: ITaskFilter) {
+    return axiosWithAuth.get<ITask[]>('/tasks', { params: filter });
+  },
 
-  async getTasks() {
-    const response = await axiosWithAuth.get<ITaskReponse[]>(this.BASE_URL);
-    return response;
+  async getTaskById(id: number) {
+    return axiosWithAuth.get<ITask>(`/tasks/${id}`);
+  },
+
+  async createTask(data: ITaskInput) {
+    return axiosWithAuth.post<ITask>('/tasks', data);
+  },
+
+  async updateTask(id: number, data: ITaskUpdate) {
+    return axiosWithAuth.patch<ITask>(`/tasks/${id}`, data);
+  },
+
+  async deleteTask(id: number) {
+    return axiosWithAuth.delete<ITask>(`/tasks/${id}`);
   }
-
-  async createTask(data: TypeTaskFormState) {
-    const response = await axiosWithAuth.post(this.BASE_URL, data);
-    return response;
-  }
-
-  async updateTask(id: string, data: TypeTaskFormState) {
-    const response = await axiosWithAuth.put(`${this.BASE_URL}/${id}`, data);
-    return response;
-  }
-
-  async deleteTask(id: string) {
-    const response = await axiosWithAuth.delete(`${this.BASE_URL}/${id}`);
-    return response;
-  }
-}
-
-export const taskService = new TaskService();
+};

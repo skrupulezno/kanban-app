@@ -1,26 +1,24 @@
 import { axiosWithAuth } from '../api/interceptors';
-import { IUser, TypeUserForm } from '../types/auth.types';
+import { IUser, IUserInput } from '../types/user.types';
 
-export interface IProfileResponse {
-  user: IUser;
-  statistics: {
-    label: string;
-    value: string;
-  }[];
-}
+export const userService = {
+  async getAllUsers() {
+    return axiosWithAuth.get<IUser[]>('/users');
+  },
 
-class UserService {
-  private BASE_URL = '/user/profile';
+  async getUserById(id: number) {
+    return axiosWithAuth.get<IUser>(`/users/${id}`);
+  },
 
-  async getProfile() {
-    const response = await axiosWithAuth.get<IProfileResponse>(this.BASE_URL);
-    return response.data;
+  async createUser(data: IUserInput) {
+    return axiosWithAuth.post<IUser>('/users', data);
+  },
+
+  async updateUser(id: number, data: Partial<IUserInput>) {
+    return axiosWithAuth.put<IUser>(`/users/${id}`, data);
+  },
+
+  async deleteUser(id: number) {
+    return axiosWithAuth.delete<boolean>(`/users/${id}`);
   }
-
-  async update(data: TypeUserForm) {
-    const response = await axiosWithAuth.put(this.BASE_URL, data);
-    return response.data;
-  }
-}
-
-export const userService = new UserService();
+};

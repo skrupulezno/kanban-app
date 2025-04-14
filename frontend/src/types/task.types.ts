@@ -1,16 +1,43 @@
-import { IBase } from './root.types';
-
-export enum EnumTaskPriority {
-  low = 'low',
-  medium = 'medium',
-  high = 'high'
+export enum TaskStage {
+  TODO = 'TODO',
+  IN_PROGRESS = 'IN_PROGRESS',
+  DONE = 'DONE'
 }
 
-export interface ITaskReponse extends IBase {
-  name: string;
-  priority?: EnumTaskPriority;
-  isCompleted: boolean;
+export interface ITask {
+  id: number;
+  title: string;
+  description?: string;
+  stage: TaskStage;
+  boardId: number;
+  spaceId: number;
+  assignedToId?: number | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
-//Partial не обязательные поля
-export type TypeTaskFormState = Partial<Omit<ITaskReponse, 'id' | 'updated'>>;
+export interface ITaskInput {
+  title: string;
+  description?: string;
+  stage?: TaskStage;
+  boardId: number;
+  spaceId: number;
+  assignedToId?: number;
+}
+
+export interface ITaskUpdate {
+  title?: string;
+  description?: string;
+  stage?: TaskStage;
+  assignedToId?: number;
+}
+
+export interface ITaskFilter {
+  stage?: TaskStage;
+  boardId?: number;
+  spaceId?: number;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+}
