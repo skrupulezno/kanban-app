@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
+import { PrismaService } from '../prisma/prisma.service';
 
 const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) {
@@ -21,7 +22,7 @@ const accessTokenExpiresIn = process.env.ACCESS_TOKEN_EXPIRES_IN || '120m';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, PrismaService],
   exports: [JwtModule, PassportModule],
 })
 export class AuthModule {}

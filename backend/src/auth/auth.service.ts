@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { TelegramOAuthDto, TelegramMiniAppDto } from './dto/telegram.dto';
+import { RegisterDto, LoginDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -10,49 +11,43 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateTelegramOAuth(data: TelegramOAuthDto) {
-    // Используем findFirst вместо findUnique
-    let user = await this.prisma.user.findFirst({
-      where: { telegramId: data.telegramId },
+  // Регистрация нового пользователя
+  async register(data: RegisterDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: data.email },
     });
-
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          telegramId: data.telegramId,
-          name: data.name,
-          authProvider: 'TELEGRAM_OAUTH',
-        },
-      });
+    if (existingUser) {
+      throw new ConflictException('Email is already taken');
     }
-
-    const payload = { sub: user.id, telegramId: user.telegramId, name: user.name };
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        email: data.email,
+        password: hashedPassword,
+        name: data.name,
+      },
+    });
+    const payload = { sub: user.id, email: user.email, name: user.name };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '120m' });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
-
-    return { status: 'success', accessToken, refreshToken };
+    return { user: { id: user.id, email: user.email, name: user.name }, accessToken, refreshToken };
   }
 
-  async validateTelegramMiniApp(data: TelegramMiniAppDto) {
-    // Используем findFirst вместо findUnique
-    let user = await this.prisma.user.findFirst({
-      where: { telegramId: data.telegramId },
+  // Логин
+  async login(data: LoginDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: data.email },
     });
-
     if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          telegramId: data.telegramId,
-          name: data.name,
-          authProvider: 'TELEGRAM_MINIAPP',
-        },
-      });
+      throw new UnauthorizedException('Invalid credentials');
     }
-
-    const payload = { sub: user.id, telegramId: user.telegramId, name: user.name };
+    const passwordValid = await bcrypt.compare(data.password, user.password);
+    if (!passwordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const payload = { sub: user.id, email: user.email, name: user.name };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '120m' });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
-
-    return { status: 'success', accessToken, refreshToken };
+    return { user: { id: user.id, email: user.email, name: user.name }, accessToken, refreshToken };
   }
 }

@@ -7,7 +7,5 @@ export const getJwtConfig = async (): Promise<JwtModuleOptions> => {
   }
   return {
     secret,
-    // При необходимости можно добавить дополнительные опции, например:
-    // signOptions: { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '120m' },
   };
 };

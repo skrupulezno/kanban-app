@@ -1,22 +1,22 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Get, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { TelegramOAuthDto, TelegramMiniAppDto } from './dto/telegram.dto';
+import { RegisterDto, LoginDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('oauth')
-  @HttpCode(HttpStatus.OK)
-  async telegramOAuth(@Body() telegramData: TelegramOAuthDto) {
-    return await this.authService.validateTelegramOAuth(telegramData);
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() registerDto: RegisterDto) {
+    return await this.authService.register(registerDto);
   }
 
-  @Post('miniapp')
+  @Post('login')
   @HttpCode(HttpStatus.OK)
-  async telegramMiniApp(@Body() telegramData: TelegramMiniAppDto) {
-    return await this.authService.validateTelegramMiniApp(telegramData);
+  async login(@Body() loginDto: LoginDto) {
+    return await this.authService.login(loginDto);
   }
   
   @UseGuards(JwtAuthGuard)
