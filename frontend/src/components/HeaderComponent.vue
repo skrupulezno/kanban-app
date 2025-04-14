@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 
-import AuthButton from './AuthButtonComponent.vue';
 
 const route = useRoute();
 
@@ -56,7 +55,7 @@ const isActive = (path: string) => {
       </div>
     </div>
     <div class="header-auth">
-      <AuthButton>Войти</AuthButton>
+      <a href="/auth/login">Войти</a>
     </div>
   </div>
 </template>

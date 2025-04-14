@@ -1,5 +1,10 @@
 import { IsString, IsOptional, IsInt, IsEnum } from 'class-validator';
-import { TaskStage } from '@prisma/client';
+
+export enum TaskStage {
+  TODO = 'TODO',
+  IN_PROGRESS = 'IN_PROGRESS',
+  DONE = 'DONE',
+}
 
 export class CreateTaskDto {
   @IsString()

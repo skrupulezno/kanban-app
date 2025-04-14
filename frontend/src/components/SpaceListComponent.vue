@@ -26,8 +26,9 @@ onMounted(async () => {
     <h2>{{ space.name }}</h2>
     <ul>
       <li v-for="board in space.boards ?? []" :key="board.id">
-        <!-- Переход по клику на доску -->
-        <router-link :to="`/board/${board.id}`">{{ board.name }}</router-link>
+        <router-link :to="{ name: 'Board', query: { id: board.id, spaceId: space.id } }">
+          {{ board.name }}
+        </router-link>
       </li>
     </ul>
   </div>

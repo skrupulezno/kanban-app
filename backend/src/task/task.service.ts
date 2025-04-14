@@ -35,23 +35,17 @@ export class TaskService {
   }
 
   async getTasks(filter: FilterTasksDto, user: JwtPayload): Promise<Task[]> {
-    const { stage, spaceId, boardId, page, pageSize, sortBy, order } = filter;
+    const { stage, spaceId, boardId } = filter;
     const where: Prisma.TaskWhereInput = {};
-
+  
     if (stage) where.stage = stage;
     if (spaceId) where.space = { id: Number(spaceId) };
-    if (boardId) where.board = { id: Number(boardId) };
-    if (user.role !== 'admin') where.assignedTo = { id: user.id };
-
-    const take = pageSize ? Number(pageSize) : 20;
-    const skip = page ? (Number(page) - 1) * take : 0;
-    const orderBy: Prisma.TaskOrderByWithRelationInput = sortBy
-    ? { [sortBy]: order?.toLowerCase() === 'desc' ? 'desc' : 'asc' }
-    : { updatedAt: 'desc' };
-
-    return this.prisma.task.findMany({ where, skip, take, orderBy });
+    if (boardId) where.boardId = Number(boardId);
+  
+    return this.prisma.task.findMany({ where });
   }
-
+  
+  
   async getTaskById(id: number): Promise<Task> {
     const task = await this.prisma.task.findUnique({ where: { id } });
     if (!task) throw new NotFoundException(`Task with id ${id} not found`);
@@ -79,10 +73,6 @@ export class TaskService {
   }
 
   async updateStage(id: number, stage: 'TODO' | 'IN_PROGRESS' | 'DONE', user: JwtPayload): Promise<Task> {
-    const task = await this.getTaskById(id);
-    if (user.role !== 'admin' && task.assignedToId !== user.id) {
-      throw new ForbiddenException('You are not allowed to update the stage of this task');
-    }
     return this.prisma.task.update({
       where: { id },
       data: { stage },
@@ -91,8 +81,7 @@ export class TaskService {
 
   async getTasksByBoard(boardId: number, user: JwtPayload): Promise<Task[]> {
     const where: Prisma.TaskWhereInput = {
-      boardId,
-      ...(user.role !== 'admin' ? { assignedTo: { id: user.id } } : {}),
+      boardId
     };
     return this.prisma.task.findMany({ where });
   }

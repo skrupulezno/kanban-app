@@ -16,10 +16,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/board/:id',
+    path: '/board',
+    name: 'Board',
     component: Board,
     meta: { requiresAuth: true }
-  }
+  },
 ];
 
 const router = createRouter({

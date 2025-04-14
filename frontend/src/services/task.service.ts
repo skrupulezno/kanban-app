@@ -1,5 +1,5 @@
 import { axiosWithAuth } from '../api/interceptors';
-import { ITask, ITaskInput, ITaskUpdate, ITaskFilter } from '../types/task.types';
+import { ITask, ITaskUpdate, ITaskFilter } from '../types/task.types';
 
 export const taskService = {
   async getAllTasks(filter?: ITaskFilter) {
@@ -10,8 +10,12 @@ export const taskService = {
     return axiosWithAuth.get<ITask>(`/tasks/${id}`);
   },
 
-  async createTask(data: ITaskInput) {
-    return axiosWithAuth.post<ITask>('/tasks', data);
+  async getByBoardId(boardId: number) {
+    return axiosWithAuth.get<ITask[]>(`/tasks/board/${boardId}`);
+  },
+
+  async createTask(boardId: number, data: Partial<ITask>) {
+    return axiosWithAuth.post<ITask>(`/boards/${boardId}/tasks`, data);
   },
 
   async updateTask(id: number, data: ITaskUpdate) {
@@ -24,5 +28,6 @@ export const taskService = {
 
     async updateStage(id: number, stage: 'TODO' | 'IN_PROGRESS' | 'DONE') {
       return axiosWithAuth.put(`/tasks/${id}/stage`, { stage });
-    }
+    },
+    
 };

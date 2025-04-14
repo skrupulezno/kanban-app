@@ -7,15 +7,11 @@ export enum TaskStage {
 export interface ITask {
   id: number;
   title: string;
-  description?: string;
-  stage: TaskStage;
+  description?: string; // <-- оставить так
+  stage: 'TODO' | 'IN_PROGRESS' | 'DONE';
   boardId: number;
-  spaceId: number;
-  assignedToId?: number | null;
-  createdAt: string;
-  updatedAt: string;
+  spaceId?: number; // если нужно
 }
-
 export interface ITaskInput {
   title: string;
   description?: string;
