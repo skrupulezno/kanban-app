@@ -1,0 +1,137 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum BusinessType {
+  SERVICE     @map("Услуга")
+  REAL_ESTATE @map("Недвижимость")
+  CATERING    @map("Общепит")
+}
+
+enum ModuleType {
+  BOOKING     @map("booking")
+  MENU        @map("menu")
+  APPOINTMENT @map("appointment")
+}
+
+// Новый перечислимый тип для методов авторизации
+enum AuthProvider {
+  TELEGRAM_MINIAPP
+  TELEGRAM_OAUTH
+}
+
+model User {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  telegramId   String?  
+  authProvider AuthProvider @default(TELEGRAM_OAUTH)
+  name         String?
+  businesses   Business[]
+  bookings     Booking[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+enum EmployeeRole {
+  STAFF
+  ADMIN
+}
+
+model Employee {
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  role       EmployeeRole
+  business   Business     @relation(fields: [businessId], references: [id])
+  businessId String       @db.ObjectId
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model Business {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  description  String?
+  image        String?
+  type         BusinessType
+  theme        Json?
+  workingHours Json
+  owner        User       @relation(fields: [ownerId], references: [id])
+  ownerId      String     @db.ObjectId
+  modules      Module[]
+  employees    Employee[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+
+model Module {
+  id                String                   @id @default(auto()) @map("_id") @db.ObjectId
+  moduleType        ModuleType
+  bookingDetail     BookingModuleDetail?
+  menuDetail        MenuModuleDetail?
+  appointmentDetail AppointmentModuleDetail?
+  // Дополнительные произвольные параметры модуля в формате JSON
+  customParameters  Json?
+  business          Business                 @relation(fields: [businessId], references: [id])
+  businessId        String                   @db.ObjectId
+  bookings          Booking[]
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+}
+
+model Booking {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  module      Module    @relation(fields: [moduleId], references: [id])
+  moduleId    String    @db.ObjectId
+  user        User?     @relation(fields: [userId], references: [id])
+  userId      String?   @db.ObjectId
+  // Время бронирования (например, выбранное пользователем время или дата бронирования)
+  bookingTime DateTime
+  // Данные формы бронирования (например, выбранные опции, дополнительные сведения)
+  formData    Json?
+  createdAt   DateTime  @default(now())
+  businessId  String?   @db.ObjectId
+}
+
+// Встроенные типы для модуля бронирования
+type BookingFormField {
+  fieldName String
+  type      String
+  required  Boolean
+}
+
+type BookingModuleDetail {
+  calendarEnabled Boolean
+  timeSlots       String[]
+  formFields      BookingFormField[]
+}
+
+// Встроенные типы для модуля меню
+type MenuItem {
+  name        String
+  description String?
+  price       Float
+}
+
+type MenuModuleDetail {
+  displayType String
+  categories  String[]
+  items       MenuItem[]
+}
+
+// Встроенные типы для модуля записи
+type AppointmentStaff {
+  name            String
+  staffIdentifier String?
+}
+
+type AppointmentModuleDetail {
+  service   String
+  duration  Int
+  timeSlots String[]
+  staff     AppointmentStaff[]
+}
