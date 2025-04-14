@@ -1,4 +1,4 @@
-// datasource указывает на использование PostgreSQL
+// datasource для PostgreSQL
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -11,24 +11,27 @@ generator client {
 
 /// Перечисление стадий выполнения задачи
 enum TaskStage {
-  TODO         // задача поставлена в очередь
-  IN_PROGRESS  // задача в работе
-  DONE         // задача выполнена
+  TODO
+  IN_PROGRESS
+  DONE
 }
 
 /// Модель пользователя
 model User {
-  id          Int       @id @default(autoincrement())
-  email       String    @unique
-  password    String
-  name        String?
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  password      String
+  name          String?
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  spaces      Space[]   @relation("UserSpaces")
-  tasks       Task[]    @relation("UserTasks")
-  tokens      Token[]
+  // Пользователь может состоять в нескольких спейсах
+  spaces        Space[]   @relation("UserSpaces")
+  // Задачи, где пользователь является исполнителем
+  assignedTasks Task[]    @relation("AssignedTasks")
+  // Токены (например, refresh-токены)
+  tokens        Token[]
 }
 
 /// Модель спейса (пространства, объединяющего доски)
@@ -39,10 +42,12 @@ model Space {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // Множество пользователей, имеющих доступ к данному пространству
+  // Пользователи, имеющие доступ к спейсу
   users       User[]    @relation("UserSpaces")
   // Доски, принадлежащие спейсу
   boards      Board[]
+  // Задачи, привязанные к спейсу
+  tasks       Task[]
 }
 
 /// Модель доски Kanban в рамках спейса
@@ -62,30 +67,33 @@ model Board {
 
 /// Модель задачи Kanban
 model Task {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String?
-  stage       TaskStage @default(TODO)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  stage        TaskStage @default(TODO)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  // Задача обязательно принадлежит доске
-  boardId     Int
-  board       Board     @relation(fields: [boardId], references: [id])
-  // Опционально, задача может быть назначена пользователю
-  userId      Int?
-  user        User?     @relation("UserTasks", fields: [userId], references: [id])
+  boardId      Int
+  board        Board     @relation(fields: [boardId], references: [id])
+  
+  spaceId      Int
+  space        Space     @relation(fields: [spaceId], references: [id])
+  
+  assignedToId Int?
+  assignedTo   User?     @relation("AssignedTasks", fields: [assignedToId], references: [id])
 }
 
-/// Модель для хранения refresh-токенов (или иной информации, связанной с JWT)
+
+/// Модель для хранения refresh-токенов
 model Token {
   id        Int      @id @default(autoincrement())
-  token     String   // сам токен (либо его хеш, если требуется безопасность)
+  token     String   
   type      String   // например, "refresh"
   createdAt DateTime @default(now())
   expiresAt DateTime
 
-  // Ссылка на пользователя, которому принадлежит токен
+  // Ссылка на пользователя
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
 }

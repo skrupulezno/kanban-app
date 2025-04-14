@@ -9,14 +9,18 @@ export class CreateTaskDto {
   @IsString()
   description?: string;
 
+  // Пользователь, который назначен как исполнитель:
   @IsOptional()
-  @IsEnum(TaskStage)
-  stage?: TaskStage;
+  @IsInt()
+  assignedToId?: number;
+
+  @IsInt()
+  spaceId: number;
 
   @IsInt()
   boardId: number;
 
   @IsOptional()
-  @IsInt()
-  userId?: number;
+  @IsEnum(TaskStage)
+  stage?: TaskStage;
 }

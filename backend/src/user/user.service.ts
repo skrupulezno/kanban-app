@@ -23,9 +23,19 @@ export class UserService {
 
   async findAll() {
     return this.prisma.user.findMany({
-      select: { password: false }, // не отдаём поле пароля
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        spaces: true,
+        tokens: true,
+        _count: true,
+      },
     });
-  }
+  }  
 
   async findOne(id: number) {
     const user = await this.prisma.user.findUnique({
