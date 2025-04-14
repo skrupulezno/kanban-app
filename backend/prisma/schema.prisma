@@ -26,11 +26,8 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // Пользователь может состоять в нескольких спейсах (многие-ко-многим)
   spaces      Space[]   @relation("UserSpaces")
-  // Задачи, назначенные пользователю
   tasks       Task[]    @relation("UserTasks")
-  // Токены для авторизации (например, refresh-токены)
   tokens      Token[]
 }
 
