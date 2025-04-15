@@ -48,24 +48,33 @@ const columns = computed(() => [
   { title: 'Done', tasks: doneTasks.value }
 ]);
 
-// Вызывается после окончания перетаскивания задачи
-async function onTaskDrop(_evt: any) {
-  const updateAll = async (tasks: ITask[], stage: 'TODO' | 'IN_PROGRESS' | 'DONE') => {
-    for (const task of tasks) {
-      task.stage = stage;
-      await taskService.updateStage(task.id, stage);
+// Обработчик события перетаскивания
+async function onTaskDrop(evt: any) {
+  console.log('Task drop event:', evt);
+  
+  // Проверяем наличие свойства added и data-атрибута data-stage на целевом контейнере
+  if (evt?.added && evt?.to?.dataset) {
+    const movedTask = evt.added.element;
+    const newStage = evt.to.dataset.stage;
+    
+    // Если статус изменился, обновляем его на сервере
+    if (newStage && movedTask && movedTask.stage !== newStage) {
+      movedTask.stage = newStage;
+      try {
+        await taskService.updateStage(movedTask.id, newStage);
+        console.log(`Задача ${movedTask.id} обновлена: новый статус ${newStage}`);
+      } catch (error) {
+        console.error('Ошибка обновления статуса задачи:', error);
+      }
     }
-  };
-
-  await updateAll(todoTasks.value, 'TODO');
-  await updateAll(inProgressTasks.value, 'IN_PROGRESS');
-  await updateAll(doneTasks.value, 'DONE');
+  } else {
+    console.warn('Элемент не был добавлен в новую колонку, evt:', evt);
+  }
 }
 
 // Создание новой задачи
 async function createTask() {
-  console.log(newTaskStage.value);
-
+  console.log('Выбранный статус для новой задачи:', newTaskStage.value);
   // При создании новой задачи изначально выбираем 'TODO'
   newTaskStage.value = 'TODO';
   
@@ -77,18 +86,20 @@ async function createTask() {
     stage: newTaskStage.value,
   };
 
-  const { data: createdTask } = await taskService.createTask(Number(boardId), newTask);
-
-  console.log(newTaskStage.value);
-  
-  if (createdTask.stage === 'TODO') {
-    todoTasks.value.push(createdTask);
-  } else if (createdTask.stage === 'IN_PROGRESS') {
-    inProgressTasks.value.push(createdTask);
-  } else if (createdTask.stage === 'DONE') {
-    doneTasks.value.push(createdTask);
+  try {
+    const { data: createdTask } = await taskService.createTask(Number(boardId), newTask);
+    
+    if (createdTask.stage === 'TODO') {
+      todoTasks.value.push(createdTask);
+    } else if (createdTask.stage === 'IN_PROGRESS') {
+      inProgressTasks.value.push(createdTask);
+    } else if (createdTask.stage === 'DONE') {
+      doneTasks.value.push(createdTask);
+    }
+  } catch (error) {
+    console.error('Ошибка создания задачи:', error);
   }
-
+  
   newTaskTitle.value = '';
   newTaskDescription.value = '';
   newTaskStage.value = 'TODO';
@@ -103,8 +114,11 @@ async function createTask() {
       <!-- Перебор колонок канбан-доски -->
       <div class="column" v-for="(column, index) in columns" :key="index">
         <div class="column-header">{{ column.title }}</div>
-        <div class="card-container">
-          <draggable :list="column.tasks" item-key="id" group="tasks" @end="onTaskDrop">
+        <div
+          class="card-container"
+          :data-stage="column.title === 'TODO' ? 'TODO' : (column.title === 'In Progress' ? 'IN_PROGRESS' : 'DONE')"
+        >
+          <draggable :list="column.tasks" item-key="id" group="tasks" @change="onTaskDrop">
             <template #item="{ element }">
               <div class="task-card">
                 <div class="task-card-title">{{ element.title }}</div>
