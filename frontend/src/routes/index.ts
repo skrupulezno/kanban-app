@@ -1,4 +1,3 @@
-// src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginForm from './LoginForm.vue';
 import RegisterForm from './RegisterForm.vue';
