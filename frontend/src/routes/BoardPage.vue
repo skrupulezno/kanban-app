@@ -21,8 +21,7 @@
           :list="column.tasks"
           group="tasks"
           item-key="id"
-          @add="onTaskDrop"
-          @end="onTaskDrop" 
+          @change="evt => onTaskChange(column.name, evt)"
         >
           <template #item="{ element }">
             <div class="task-card">
@@ -66,40 +65,34 @@ const todoTasks = ref<ITask[]>([]);
 const inProgressTasks = ref<ITask[]>([]);
 const doneTasks = ref<ITask[]>([]);
 
-const newTaskTitle = ref('');
-const newTaskDescription = ref('');
-const showModal = ref(false);
-
-onMounted(async () => {
-  try {
-    const { data } = await taskService.getByBoardId(boardId);
-    todoTasks.value = data.filter(t => t.stage === 'TODO');
-    inProgressTasks.value = data.filter(t => t.stage === 'IN_PROGRESS');
-    doneTasks.value = data.filter(t => t.stage === 'DONE');
-  } catch (err) {
-    console.error('Ошибка загрузки задач:', err);
-  }
-});
-
 const columns = computed(() => [
-  { name: 'TODO', label: 'TO DO', tasks: todoTasks.value },
+  { name: 'TODO',        label: 'To Do',       tasks: todoTasks.value },
   { name: 'IN_PROGRESS', label: 'In Progress', tasks: inProgressTasks.value },
-  { name: 'DONE', label: 'Done', tasks: doneTasks.value },
+  { name: 'DONE',        label: 'Done',        tasks: doneTasks.value },
 ]);
 
-async function onTaskDrop(evt: SortableEvent) {
-  // evt.added exists if it was really added here
-  console.log(evt);
-  
-  if (evt.added) {
-    const movedTask = evt.added.element as ITask;
-    const toCol = (evt.to as HTMLElement).closest('.column')!;
-    const newStage = toCol!.getAttribute('data-stage') as ITask['stage'];
+onMounted(async () => {
+  const { data } = await taskService.getByBoardId(boardId);
+  todoTasks.value       = data.filter(t => t.stage === 'TODO');
+  inProgressTasks.value = data.filter(t => t.stage === 'IN_PROGRESS');
+  doneTasks.value       = data.filter(t => t.stage === 'DONE');
+});
 
-    if (movedTask.stage !== newStage) {
-      await taskService.updateStage(movedTask.id, newStage);
-      movedTask.stage = newStage;
-    }
+async function onTaskChange(
+  newStage: ITask['stage'],
+  evt: { added?: { element: ITask } }
+) {
+  // если внутри списка — выходим
+  if (!evt.added) return;
+
+  const movedTask = evt.added.element;
+  if (movedTask.stage === newStage) return;
+
+  try {
+    await taskService.updateStage(movedTask.id, newStage);
+    movedTask.stage = newStage;
+  } catch (err) {
+    console.error('Ошибка при обновлении стадии:', err);
   }
 }
 
