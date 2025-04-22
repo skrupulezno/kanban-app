@@ -55,15 +55,24 @@ import { useRoute, useRouter } from 'vue-router';
 import draggable from 'vuedraggable';
 import { taskService } from '../services/task.service';
 import { ITask } from '../types/task.types';
+import { useAuthStore } from '../stores/auth.store'
 
 const route = useRoute();
 const router = useRouter();
+
+const authStore = useAuthStore();
+
 const boardId = Number(route.query.id);
 const spaceId = Number(route.query.spaceId);
 
 const todoTasks = ref<ITask[]>([]);
 const inProgressTasks = ref<ITask[]>([]);
 const doneTasks = ref<ITask[]>([]);
+
+const showModal = ref(false);
+const newTaskTitle = ref('');
+const newTaskDescription = ref('');
+const assignedToId = ref(authStore.user?.id);
 
 const columns = computed(() => [
   { name: 'TODO',        label: 'To Do',       tasks: todoTasks.value },
@@ -82,7 +91,6 @@ async function onTaskChange(
   newStage: ITask['stage'],
   evt: { added?: { element: ITask } }
 ) {
-  // если внутри списка — выходим
   if (!evt.added) return;
 
   const movedTask = evt.added.element;
@@ -102,7 +110,8 @@ async function createTask() {
     spaceId,
     title: newTaskTitle.value,
     description: newTaskDescription.value,
-    stage: 'TODO' as const
+    stage: 'TODO' as const,
+    assignedToId: assignedToId.value,
   };
   try {
     const { data: created } = await taskService.createTask(boardId, payload);
@@ -240,7 +249,7 @@ function goBack() {
   justify-content: center;
 }
 .modal {
-  background: #fff;
+  background: #575757;
   border-radius: 8px;
   padding: 2rem;
   width: 320px;
