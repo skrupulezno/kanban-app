@@ -2,8 +2,13 @@
 <template>
   <div class="app">
     <header class="app-header">
-      <h1>Канбан доска</h1>
-      <button class="logout-btn" @click="logout">Выйти</button>
+      <h1>Главная</h1>
+      <button
+        class="logout-btn"
+        @click="logout"
+      >
+        Выйти
+      </button>
     </header>
 
     <main class="container">
@@ -46,30 +51,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useAuthStore } from '../stores/auth.store';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { spaceService } from '../services/space.service';
-import { boardService } from '../services/board.service';
 
-import SpaceList from '../components/SpaceList.vue';
 import BoardSection from '../components/BoardSection.vue';
+import SpaceList from '../components/SpaceList.vue';
+import { boardService } from '../services/board.service';
+import { spaceService } from '../services/space.service';
+import { useAuthStore } from '../stores/auth.store';
 
 const authStore = useAuthStore();
 const router = useRouter();
 
 const userEmail = computed(() => authStore.user?.email || '');
 
-const spaces = ref<Array<{ id: number; name: string; description?: string }>>([]);
+const spaces = ref<Array<{ id: number; name: string; description?: string }>>(
+  []
+);
 const newSpace = ref({ name: '', description: '' });
 const loadingSpaces = ref(false);
 
 const selectedSpaceId = ref<number | null>(null);
-const boards = ref<Array<{ id: number; name: string; description?: string }>>([]);
+const boards = ref<Array<{ id: number; name: string; description?: string }>>(
+  []
+);
 const loadingBoards = ref(false);
 
-const selectedSpace = computed(() =>
-  spaces.value.find((s) => s.id === selectedSpaceId.value) || null
+const selectedSpace = computed(
+  () => spaces.value.find(s => s.id === selectedSpaceId.value) || null
 );
 
 const fetchSpaces = async () => {
@@ -88,7 +97,7 @@ const createSpace = async () => {
   try {
     await spaceService.createSpace({
       name: newSpace.value.name,
-      description: newSpace.value.description || undefined,
+      description: newSpace.value.description || undefined
     });
     newSpace.value = { name: '', description: '' };
     await fetchSpaces();
@@ -115,7 +124,7 @@ const createBoard = async (payload: { name: string; description?: string }) => {
     await boardService.createBoard({
       name: payload.name,
       description: payload.description || undefined,
-      spaceId: selectedSpaceId.value,
+      spaceId: selectedSpaceId.value
     });
     await selectSpace(selectedSpaceId.value);
   } finally {
